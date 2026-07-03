@@ -1,68 +1,107 @@
-# Importar
-from flask import Flask, render_template, request, redirect
-# Importando a biblioteca de banco de dados
+# Importações
+from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 
-
 app = Flask(__name__)
-# Conectando ao SQLite
+
+# Chave secreta para uso de session
+app.secret_key = 'my_top_secret_123'
+
+# Configuração do banco de dados
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///diary.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Criando um Banco de Dados (DB)
+
+# Inicializando o banco
 db = SQLAlchemy(app)
 
-# Tarefa #1. Criar uma tabela no Banco de Dados
+# -------------------------
+# Tabela de Cards
+# -------------------------
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    subtitle = db.Column(db.String(300), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    user_email = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f'<Card {self.id}>'
 
 
+# -------------------------
+# Atividade #1
+# Criar a tabela User
+# -------------------------
+
+# Iniciando página de conteúdo
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    error = ''
+
+    if request.method == 'POST':
+        form_login = request.form['email']
+        form_password = request.form['password']
+
+        # Atividade #4. Verificação do usuário
 
 
-
-
-
-
-
-
-
-# Executando a página com conteúdo
-@app.route('/')
-def index():
-    # Exibindo os objetos do Banco de Dados
-    # Tarefa #2. Exibir os objetos do Banco de Dados no index.html
     
+    else:
+        return render_template('login.html')
 
-    return render_template('index.html',
-                           #cards = cards
 
-                           )
 
-# Executando a página com o cartão
+@app.route('/reg', methods=['GET', 'POST'])
+def reg():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        # Atividade #3. Salvar usuário no banco
+
+        
+
+        return redirect('/')
+
+    return render_template('registration.html')
+
+
+# Iniciando página de conteúdo
+@app.route('/index')
+def index():
+    # Atividade #4. Mostrar apenas os cards do usuário logado
+    cards = Card.query.order_by(Card.id).all()
+    return render_template('index.html', cards=cards)
+
+
+# Iniciando página de cartão
 @app.route('/card/<int:id>')
 def card(id):
-    # Tarefa #2. Exibir o cartão correto pelo seu id
+    card = Card.query.get(id)
     
-
     return render_template('card.html', card=card)
 
-# Executando a página e criando o cartão
+
+# Iniciando página de criação de cartão
 @app.route('/create')
 def create():
     return render_template('create_card.html')
 
-# O formulário do cartão
-@app.route('/form_create', methods=['GET','POST'])
+
+# Formulário de criação
+@app.route('/form_create', methods=['GET', 'POST'])
 def form_create():
     if request.method == 'POST':
-        title =  request.form['title']
-        subtitle =  request.form['subtitle']
-        text =  request.form['text']
+        title = request.form['title']
+        subtitle = request.form['subtitle']
+        text = request.form['text']
 
-        # Tarefa #2. Criar uma forma de armazenar dados no Banco de Dados
-        
+        # Atividade #4. Criar card em nome do usuário logado
+        card = Card(title=title, subtitle=subtitle, text=text)
 
-
-
-
-        return redirect('/')
+        db.session.add(card)
+        db.session.commit()
+        return redirect('/index')
     else:
         return render_template('create_card.html')
 
